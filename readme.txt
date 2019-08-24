@@ -1,16 +1,21 @@
-Unimplode6a (unimplode6a.h) is a public domain single-header-file C/C++ library
-for decompressing ZIP method 6 ("Implode"/"Explode") compression.
+Unimplode6a (unimplode6a.h) is a public domain or MIT licensed single-header-
+file C/C++ library for decompressing ZIP method 6 ("Implode"/"Explode")
+compression.
 
 Implode compression was used by PKZIP version 1.0x through 1.1x.
 
+Website: <https://entropymine.com/oldunzip/>
+Development: <https://github.com/jsummers/oldunzip>
+
 === The big problem with this library ===
 
-It does not support "Shrink" (method 1) decompression. It is not very useful
-without that, because most ZIP files that use Implode also use Shrink, for
-files less than or equal to 320 bytes in size.
+... is that it does not support "Shrink" (method 1) decompression. It is not
+very useful without that, because most ZIP files that use Implode also use
+Shrink, for files less than or equal to 320 bytes in size.
 
 If this project is named "oldunzip", that's because of the hope that it might
-someday be expanded to include similar libraries for the Shrink, and/or Reduce, compression methods.
+someday be expanded to include similar libraries for the Shrink, and/or Reduce,
+compression methods.
 
 === Basic information about the library ===
 
@@ -18,7 +23,8 @@ Unimplode6a was developed by Jason Summers, based on public domain code by Mark
 Adler, from Info-ZIP UnZip v5.4. Note that 5.4 was the last version of UnZip in
 which the code was public domain.
 
-For more information, refer to the comments in unimplode6a.h.
+For more information, refer to the comments in unimplode6a.h, and the technical
+notes below.
 
 === Other files in this project ===
 
@@ -28,7 +34,8 @@ file, naming the output files "demo.???.out".
 
 === Where to get ZIP files that use Implode compression ===
 
-I don't know of a really good resource. You could try some of the DOS CDs at
+Implode was used by most ZIP files created in 1992 or earlier. I don't know of
+a really good resource. You could try some of the DOS CDs at
 <http://cd.textfiles.com/directory.html>.
 
 Or you could make them, with PKZIP 1.10 (search for PKZ110.EXE) + DOSBox
@@ -45,7 +52,7 @@ The "6" comes from ZIP compression method 6.
 The "a" is an arbitrary suffix to improve the uniqueness of the name, and
 prevent it from ending with a digit. Or it could be for Adler, if you want.
 
-=== Technical information ===
+=== Technical notes ===
 
 This section is a supplement to the information in the comments and the example
 code in unimplode6a.h.
