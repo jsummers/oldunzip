@@ -171,11 +171,11 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 	char outfn[512];
 
 	printf("Member file #%d\n", mfd->idx);
-	printf("Central dir entry offset: %u\n", (unsigned int)mfd->central_dir_entry_pos); // 
+	printf("Central dir entry offset: %u\n", (unsigned int)mfd->central_dir_entry_pos);
 
 	DEMO_FSEEK(zfd->inf, mfd->central_dir_entry_pos, SEEK_SET);
 
-	sig = readui32(zfd); // 139487
+	sig = readui32(zfd);
 	if(sig != 0x2014b50U) {
 		printf("Parse error\n");
 		goto done;
@@ -183,9 +183,9 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 
 	skipbytes(zfd, 4); // version-made, version-needed
 
-	mfd->bit_flags = readui16(zfd); // 139495
+	mfd->bit_flags = readui16(zfd);
 	printf("Bit flags: 0x%04x\n", (unsigned int)mfd->bit_flags);
-	mfd->cmpr_method = readui16(zfd); // 139497
+	mfd->cmpr_method = readui16(zfd);
 	printf("Compression method: %u\n", (unsigned int)mfd->cmpr_method);
 
 	skipbytes(zfd, 8); // time, date, crc
