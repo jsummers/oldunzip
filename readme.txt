@@ -28,7 +28,7 @@ notes below.
 
 === Other files in this project ===
 
-ui6ademo.c is a sample program that uses the library, and implements a minimal
+ozdemo.c is a sample program that uses the library, and implements a minimal
 ZIP parser. It will extract up to 25 Implode-compressed member files from a ZIP
 file, naming the output files "demo.???.out".
 

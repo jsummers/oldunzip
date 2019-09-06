@@ -1,8 +1,8 @@
 *.out
-/ui6ademo
-/ui6ademo.exe
-/_ui6ademocpp.cpp
-/_ui6ademocpp
-/_ui6ademocpp.exe
+/ozdemo
+/ozdemo.exe
+/_ozdemocpp.cpp
+/_ozdemocpp
+/_ozdemocpp.exe
 /testexamplecode
 /testexamplecode.exe
