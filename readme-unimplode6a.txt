@@ -13,10 +13,6 @@ Development: <https://github.com/jsummers/oldunzip>
 very useful without that, because most ZIP files that use Implode also use
 Shrink, for files less than or equal to 320 bytes in size.
 
-If this project is named "oldunzip", that's because of the hope that it might
-someday be expanded to include similar libraries for the Shrink, and/or Reduce,
-compression methods.
-
 === Basic information about the library ===
 
 Unimplode6a was developed by Jason Summers, based on public domain code by Mark
@@ -26,12 +22,6 @@ which the code was public domain.
 For more information, refer to the comments in unimplode6a.h, and the technical
 notes below.
 
-=== Other files in this project ===
-
-ozdemo.c is a sample program that uses the library, and implements a minimal
-ZIP parser. It will extract up to 25 Implode-compressed member files from a ZIP
-file, naming the output files "demo.???.out".
-
 === Where to get ZIP files that use Implode compression ===
 
 Implode was used by most ZIP files created in 1992 or earlier. I don't know of
@@ -39,7 +29,8 @@ a really good resource. You could try some of the DOS CDs at
 <http://cd.textfiles.com/directory.html>.
 
 Or you could make them, with PKZIP 1.10 (search for PKZ110.EXE) + DOSBox
-<https://www.dosbox.com/>.
+<https://www.dosbox.com/>. Suggest using the -ei option documented in the
+ADDENDUM.DOC file.
 
 === About the name "Unimplode6a" ===
 
