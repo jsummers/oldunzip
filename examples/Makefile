@@ -5,22 +5,23 @@ all: ozdemo _ozdemocpp testexamplecode
 
 CFLAGS ?= -Wall
 CXXFLAGS ?= -Wall
+HDRS:= ../unimplode6a.h ../ozunreduce.h
 
-ozdemo: ozdemo.c ../unimplode6a.h
+ozdemo: ozdemo.c $(HDRS)
 	$(CC) $(CFLAGS) -I.. -o $@ $<
 
 # Test that it can be compiled as C++.
 _ozdemocpp.cpp: ozdemo.c
 	cp $< $@
 
-_ozdemocpp: _ozdemocpp.cpp ../unimplode6a.h
+_ozdemocpp: _ozdemocpp.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -I.. -o $@ $<
 
-# Test that the example code in unimplode6a.h compiles.
-testexamplecode: testexamplecode.c ../unimplode6a.h
+# Test that the example code in the libraries compiles.
+testexamplecode: testexamplecode.c $(HDRS)
 	$(CC) $(CFLAGS) -I.. -o $@ $<
 
 clean:
 	rm -f ozdemo demo.*.out \
  _ozdemocpp _ozdemocpp.cpp \
- testexamplecode example.out
+ testexamplecode example-i.out example-r.out

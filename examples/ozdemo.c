@@ -1,7 +1,7 @@
-// Demonstration program for the Unimplode6a library.
+// Demonstration program for the Ozunreduce and Unimplode6a libraries.
 // Written by Jason Summers, 2019.
 /*
-======================== TERMS OF USE for ui6ademo.c =========================
+======================== TERMS OF USE for ozdemo.c =========================
 This is free and unencumbered software released into the public domain.
 
 Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -36,6 +36,7 @@ For more information, please refer to <http://unlicense.org/>
 #include <stdint.h>
 
 #include "unimplode6a.h"
+#include "ozunreduce.h"
 
 #define DEMO_FSEEK fseek
 #define DEMO_FTELL ftell
@@ -45,7 +46,65 @@ struct demo_userdata {
 	FILE *outf;
 };
 
-static size_t my_read(ui6a_ctx *ui6a, UI6A_UINT8 *buf, size_t size)
+//////////////////////////////////////////////////////////////////////////////
+// Unreduce
+//////////////////////////////////////////////////////////////////////////////
+
+static size_t my_ozur_read(ozur_ctx *ozur, OZUR_UINT8 *buf, size_t size)
+{
+	struct demo_userdata *u = (struct demo_userdata*)ozur->userdata;
+	return (size_t)fread(buf, 1, size, u->inf);
+}
+
+static size_t my_ozur_write(ozur_ctx *ozur, const OZUR_UINT8 *buf, size_t size)
+{
+	struct demo_userdata *u = (struct demo_userdata*)ozur->userdata;
+	return (size_t)fwrite(buf, 1, size, u->outf);
+}
+
+static void unreduce_member_file(FILE *inf, off_t data_offset,
+	off_t csize, off_t ucsize, unsigned int cmpr_factor, char *outfn)
+{
+	ozur_ctx *ozur = NULL;
+	FILE *outf = NULL;
+	struct demo_userdata u;
+
+	outf = fopen(outfn, "wb");
+	if(!outf) {
+		printf("Open for write failed\n");
+		goto done;
+	}
+	printf("Extracting to %s\n", outfn);
+
+	u.inf = inf;
+	u.outf = outf;
+
+	ozur = (ozur_ctx *)calloc(1, sizeof(ozur_ctx));
+	if(!ozur) goto done;
+
+	ozur->userdata = (void*)&u;
+	ozur->cmpr_size = csize;
+	ozur->uncmpr_size = ucsize;
+	ozur->cmpr_factor = cmpr_factor;
+	ozur->cb_read = my_ozur_read;
+	ozur->cb_write = my_ozur_write;
+	DEMO_FSEEK(inf, (long)data_offset, SEEK_SET);
+
+	ozur_run(ozur);
+	if(ozur->error_code != OZUR_ERRCODE_OK) {
+		printf("Decompression failed (code %d)\n", ozur->error_code);
+	}
+
+done:
+	if(outf) fclose(outf);
+	free(ozur);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+// Unimplode
+//////////////////////////////////////////////////////////////////////////////
+
+static size_t my_ui6a_read(ui6a_ctx *ui6a, UI6A_UINT8 *buf, size_t size)
 {
 	struct demo_userdata *u = (struct demo_userdata*)ui6a->userdata;
 
@@ -54,7 +113,7 @@ static size_t my_read(ui6a_ctx *ui6a, UI6A_UINT8 *buf, size_t size)
 	return (size_t)fread(buf, 1, size, u->inf);
 }
 
-static size_t my_write(ui6a_ctx *ui6a, const UI6A_UINT8 *buf, size_t size)
+static size_t my_ui6a_write(ui6a_ctx *ui6a, const UI6A_UINT8 *buf, size_t size)
 {
 	struct demo_userdata *u = (struct demo_userdata*)ui6a->userdata;
 
@@ -85,10 +144,10 @@ static void unimplode_member_file(FILE *inf, off_t data_offset,
 	ui6a->cmpr_size = csize;
 	ui6a->uncmpr_size = ucsize;
 	ui6a->bit_flags = bit_flags;
-	ui6a->cb_read = my_read;
-	ui6a->cb_write = my_write;
+	ui6a->cb_read = my_ui6a_read;
+	ui6a->cb_write = my_ui6a_write;
 
-	DEMO_FSEEK(inf, data_offset, SEEK_SET);
+	DEMO_FSEEK(inf, (long)data_offset, SEEK_SET);
 	ui6a_unimplode(ui6a);
 	if(ui6a->error_code != UI6A_ERRCODE_OK) {
 		printf("Decompression failed (code %d)\n", ui6a->error_code);
@@ -97,12 +156,11 @@ static void unimplode_member_file(FILE *inf, off_t data_offset,
 done:
 	ui6a_destroy(ui6a);
 	if(outf) fclose(outf);
-	return;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // Below this point is just code for ZIP parsing, nothing specific to
-// Unimplode6a.
+// the libraries.
 //
 // (Due to the complexity of ZIP format, and the fact that Implode
 // compression is pretty much exclusive to ZIP, the minimal useful sample
@@ -212,7 +270,7 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 	// We think we've parsed the central dir entry successfully, so return "success".
 	retval = 1;
 
-	if(mfd->cmpr_method != 6) {
+	if(mfd->cmpr_method<2 || mfd->cmpr_method>6) {
 		printf("Compression method %u not supported\n", (unsigned int)mfd->cmpr_method);
 		goto done;
 	}
@@ -235,8 +293,14 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 
 	DEMO_SNPRINTF(outfn, sizeof(outfn), "demo.%03d.out", mfd->idx);
 
-	unimplode_member_file(zfd->inf, mfd->data_offset, mfd->csize,
-		mfd->ucsize, mfd->bit_flags, outfn);
+	if(mfd->cmpr_method>=2 && mfd->cmpr_method<=5) {
+		unreduce_member_file(zfd->inf, mfd->data_offset, mfd->csize,
+			mfd->ucsize, (unsigned int)(mfd->cmpr_method - 1), outfn);
+	}
+	else if(mfd->cmpr_method==6) {
+		unimplode_member_file(zfd->inf, mfd->data_offset, mfd->csize,
+			mfd->ucsize, mfd->bit_flags, outfn);
+	}
 	zfd->num_files_extracted++;
 
 done:
