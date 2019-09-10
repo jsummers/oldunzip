@@ -52,17 +52,17 @@ The library does not "#include" any header files, so your program will have to
 do that, or otherwise define the symbols the library needs. For example, you
 must define either off_t (typically by #including <sys/types.h>) or UI6A_OFF_T.
 
-The decompression is streamable, but not suspendable. Your program must be able
-to produce or consume an arbitrary number of bytes on demand.
-
-The library does not do any CRC validation of the decompressed data. Your
-program can, and probably should, implement such a feature.
-
 There are four variants of Implode compression, and no in-stream way to tell
 which one was used. You must provide this information in the ->bit_flags field.
 This can be a copy of the "general purpose bit flag" field from the local or
 central directory information in the ZIP file. Any bits irrelevant to Implode
 compression will be ignored.
+
+The decompression is streamable, but not suspendable. Your program must be able
+to produce or consume an arbitrary number of bytes on demand.
+
+The library does not do any CRC validation of the decompressed data. Your
+program can, and probably should, implement such a feature.
 
 The library is intended to be compatible with Imploded files supported by PKZIP
 1.10 and later, but not necessarily with all the files supported by PKZIP 1.01

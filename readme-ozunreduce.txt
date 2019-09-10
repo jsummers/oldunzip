@@ -27,7 +27,7 @@ To make them, one way is to find a copy of PKZIP 0.92 (search for PKZ092.EXE),
 and run it in DOSBox <https://www.dosbox.com/>.
 
 Use both the -ea4 and -eb4 options (replace "4" with "1", "2", or "3" if
-desired. Files apparently have to be at least 2048 bytes in size in order for
+desired). Files apparently have to be at least 2048 bytes in size in order for
 PKZIP to choose the Reduce method.
 
 === Technical notes ===
