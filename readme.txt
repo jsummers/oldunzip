@@ -12,3 +12,8 @@ For more information, see the individual readme files, and the .h files.
 ozdemo.c is a sample program that uses the libraries, and implements a minimal
 ZIP parser. It will extract up to 25 supported member files from a ZIP file,
 naming the output files "demo.???.out".
+
+testexamplecode.c helps verify that the #ifdefed-out example code in the
+libraries works.
+
+ozft.c makes it easier to do fuzz testing with afl-fuzz.

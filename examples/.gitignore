@@ -6,3 +6,9 @@
 /_ozdemocpp.exe
 /testexamplecode
 /testexamplecode.exe
+/ozft
+/ozft.exe
+/ozft-afl
+/ozft-afl.exe
+/testcase_dir
+/findings_dir

@@ -1,10 +1,11 @@
 
 default: ozdemo
-all: ozdemo _ozdemocpp testexamplecode
+all: ozdemo _ozdemocpp testexamplecode ozft
 .PHONY: default all clean
 
 CFLAGS ?= -Wall
 CXXFLAGS ?= -Wall
+AFLGCC ?= afl-gcc
 HDRS:= ../unimplode6a.h ../ozunreduce.h
 
 ozdemo: ozdemo.c $(HDRS)
@@ -21,7 +22,15 @@ _ozdemocpp: _ozdemocpp.cpp $(HDRS)
 testexamplecode: testexamplecode.c $(HDRS)
 	$(CC) $(CFLAGS) -I.. -o $@ $<
 
+# A utility to help with fuzz testing
+ozft: ozft.c $(HDRS)
+	$(CC) $(CFLAGS) -I.. -o $@ $<
+
+ozft-afl: ozft.c $(HDRS)
+	$(AFLGCC) $(CFLAGS) -I.. -o $@ $<
+
 clean:
 	rm -f ozdemo demo.*.out \
  _ozdemocpp _ozdemocpp.cpp \
- testexamplecode example-i.out example-r.out
+ testexamplecode example-i.out example-r.out \
+ ozft ozft-afl
