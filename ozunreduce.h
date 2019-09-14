@@ -72,7 +72,7 @@ For more information, please refer to <http://unlicense.org/>
 ==============================================================================
 */
 
-#define OZUR_VERSION 20190912
+#define OZUR_VERSION 20190914
 
 #ifndef OZUR_UINT8
 #define OZUR_UINT8   unsigned char
@@ -169,6 +169,7 @@ static void ozur_refill_inbuf(ozur_ctx *ozur)
 		ozur_set_error(ozur, OZUR_ERRCODE_READ_FAILED);
 		return;
 	}
+	ozur->cmpr_nbytes_read += (OZUR_OFF_T)nbytes_to_read;
 	ozur->inbuf_nbytes_total = nbytes_to_read;
 }
 
