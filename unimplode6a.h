@@ -146,7 +146,7 @@ For more information, please refer to <http://unlicense.org/>
 /* inflate.c -- put in the public domain by Mark Adler
    version c16b, 29 March 1998 */
 
-#define UI6A_VERSION 20190912
+#define UI6A_VERSION 20190914
 
 #ifndef UI6A_UINT8
 #define UI6A_UINT8   unsigned char
@@ -715,7 +715,7 @@ static void ui6a_huft_build(ui6a_ctx *ui6a, const unsigned *b, unsigned n, unsig
 
 	/* Check if we were given an incomplete table */
 	if (y != 0 && g != 1) {
-		ui6a_set_error(ui6a, UI6A_ERRCODE_GENERIC_ERROR);
+		ui6a_set_error(ui6a, UI6A_ERRCODE_BAD_CDATA);
 	}
 
 done:
