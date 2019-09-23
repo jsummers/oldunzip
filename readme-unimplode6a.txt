@@ -64,8 +64,6 @@ to produce or consume an arbitrary number of bytes on demand.
 The library does not do any CRC validation of the decompressed data. Your
 program can, and probably should, implement such a feature.
 
-The library is intended to be compatible with Imploded files supported by PKZIP
-1.10 and later, but not necessarily with all the files supported by PKZIP 1.01
-and 1.02. It seems that two of the four Implode variants were changed in PKZIP
-1.10.
-
+The library is intended to be compatible with Imploded files that can be
+decompressed by PKZIP 1.10 and later. See the comment in the example code for
+a note about compatibility with PKZIP 1.01 and 1.02.
