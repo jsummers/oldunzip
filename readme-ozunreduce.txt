@@ -17,14 +17,13 @@ notes below.
 
 === Where to get ZIP files that use Reduce compression ===
 
-You may have to make them yourself. Such files do exist in the wild, and can
-sometimes be found in collections of old DOS software, but they're not common.
-They might be more common in ZIP files that are inside of other ZIP files, on
-the theory that such internal files were less likely to be updated by the
-maintainers of software collections.
+There might be some listed at the Oldunzip/Ozunreduce website. They're not
+common, but they do exist in the wild. They might be more common in ZIP files
+that are inside of other ZIP files, on the theory that such internal files were
+less likely to be updated by the maintainers of software collections.
 
-To make them, one way is to find a copy of PKZIP 0.92 (search for PKZ092.EXE),
-and run it in DOSBox <https://www.dosbox.com/>.
+To make them yourself, one way is to find a copy of PKZIP 0.92 (search for
+PKZ092.EXE), and run it in DOSBox <https://www.dosbox.com/>.
 
 Use both the -ea4 and -eb4 options (replace "4" with "1", "2", or "3" if
 desired). Files apparently have to be at least 2048 bytes in size in order for
