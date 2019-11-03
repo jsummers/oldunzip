@@ -37,6 +37,7 @@ For more information, please refer to <http://unlicense.org/>
 
 #include "unimplode6a.h"
 #include "ozunreduce.h"
+#include "ozunshrink.h"
 
 #define DEMO_FSEEK fseek
 #define DEMO_FTELL ftell
@@ -45,6 +46,59 @@ struct demo_userdata {
 	FILE *inf;
 	FILE *outf;
 };
+
+//////////////////////////////////////////////////////////////////////////////
+// Unshrink
+//////////////////////////////////////////////////////////////////////////////
+
+static size_t my_ozus_read(ozus_ctx *ozus, OZUS_UINT8 *buf, size_t size)
+{
+	struct demo_userdata *u = (struct demo_userdata*)ozus->userdata;
+	return (size_t)fread(buf, 1, size, u->inf);
+}
+
+static size_t my_ozus_write(ozus_ctx *ozus, const OZUS_UINT8 *buf, size_t size)
+{
+	struct demo_userdata *u = (struct demo_userdata*)ozus->userdata;
+	return (size_t)fwrite(buf, 1, size, u->outf);
+}
+
+static void unshrink_member_file(FILE *inf, off_t data_offset,
+	off_t csize, off_t ucsize, char *outfn)
+{
+	ozus_ctx *ozus = NULL;
+	FILE *outf = NULL;
+	struct demo_userdata u;
+
+	outf = fopen(outfn, "wb");
+	if(!outf) {
+		printf("Open for write failed\n");
+		goto done;
+	}
+	printf("Extracting to %s\n", outfn);
+
+	u.inf = inf;
+	u.outf = outf;
+
+	ozus = (ozus_ctx *)calloc(1, sizeof(ozus_ctx));
+	if(!ozus) goto done;
+
+	ozus->userdata = (void*)&u;
+	ozus->cmpr_size = csize;
+	ozus->uncmpr_size = ucsize;
+	ozus->cb_read = my_ozus_read;
+	ozus->cb_write = my_ozus_write;
+	DEMO_FSEEK(inf, (long)data_offset, SEEK_SET);
+
+	ozus_run(ozus);
+	if(ozus->error_code != OZUS_ERRCODE_OK) {
+		printf("Decompression failed (code %d)\n", ozus->error_code);
+	}
+
+done:
+	if(outf) fclose(outf);
+	free(ozus);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 // Unreduce
@@ -270,7 +324,7 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 	// We think we've parsed the central dir entry successfully, so return "success".
 	retval = 1;
 
-	if(mfd->cmpr_method<2 || mfd->cmpr_method>6) {
+	if(mfd->cmpr_method<1 || mfd->cmpr_method>6) {
 		printf("Compression method %u not supported\n", (unsigned int)mfd->cmpr_method);
 		goto done;
 	}
@@ -293,7 +347,11 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 
 	DEMO_SNPRINTF(outfn, sizeof(outfn), "demo.%03d.out", mfd->idx);
 
-	if(mfd->cmpr_method>=2 && mfd->cmpr_method<=5) {
+	if(mfd->cmpr_method==1) {
+		unshrink_member_file(zfd->inf, mfd->data_offset, mfd->csize,
+			mfd->ucsize, outfn);
+	}
+	else if(mfd->cmpr_method>=2 && mfd->cmpr_method<=5) {
 		unreduce_member_file(zfd->inf, mfd->data_offset, mfd->csize,
 			mfd->ucsize, (unsigned int)(mfd->cmpr_method - 1), outfn);
 	}

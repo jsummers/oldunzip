@@ -1,7 +1,8 @@
 "Old Unzip" - A collection a public domain or MIT licensed single-header-file
 C/C++ libraries to help decompress ZIP files.
 
-Currently, there are two libraries:
+There are three libraries:
+* ozunshrink.h: "shrink" compression (method 1)
 * ozunreduce.h: "reduce"/"expand" compression (methods 2-5)
 * unimplode6a.h: "implode"/"explode" compression (method 6)
 
