@@ -7,12 +7,6 @@ Implode compression was used by PKZIP version 1.0x through 1.1x.
 Website: <https://entropymine.com/oldunzip/>
 Development: <https://github.com/jsummers/oldunzip>
 
-=== The big problem with this library ===
-
-... is that it does not support "Shrink" (method 1) decompression. It is not
-very useful without that, because most ZIP files that use Implode also use
-Shrink, for files less than or equal to 320 bytes in size.
-
 === Basic information about the library ===
 
 Unimplode6a was developed by Jason Summers, based on public domain code by Mark
