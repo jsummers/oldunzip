@@ -6,7 +6,7 @@ all: ozdemo _ozdemocpp testexamplecode ozft
 CFLAGS ?= -Wall
 CXXFLAGS ?= -Wall
 AFLGCC ?= afl-gcc
-HDRS:= ../unimplode6a.h ../ozunreduce.h
+HDRS:= ../unimplode6a.h ../ozunreduce.h ../ozunshrink.h
 
 ozdemo: ozdemo.c $(HDRS)
 	$(CC) $(CFLAGS) -I.. -o $@ $<
@@ -32,5 +32,5 @@ ozft-afl: ozft.c $(HDRS)
 clean:
 	rm -f ozdemo demo.*.out \
  _ozdemocpp _ozdemocpp.cpp \
- testexamplecode example-i.out example-r.out \
+ testexamplecode example-i.out example-r.out example-s.out \
  ozft ozft-afl
