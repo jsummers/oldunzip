@@ -246,6 +246,13 @@ static void ozus_emit_code(ozus_ctx *ozus, OZUS_CODE code1)
 		// valbuf is a stack, essentially. We fill it in the reverse direction,
 		// to make it simpler to write the final byte sequence.
 		valbuf_pos--;
+
+		if(code >= 257 && ozus->ct[code].parent==OZUS_INVALID_CODE) {
+			ozus->valbuf[valbuf_pos] = ozus->last_value;
+			code = ozus->oldcode;
+			continue;
+		}
+
 		ozus->valbuf[valbuf_pos] = ozus->ct[code].value;
 
 		if(code < 257) {
