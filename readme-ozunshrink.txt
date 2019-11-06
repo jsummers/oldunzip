@@ -36,6 +36,7 @@ do that, or otherwise define the symbols the library needs. Typically, that
 means you need:
 
  #include <sys/types.h>
+ #include <string.h>
  #include <stdint.h>
 
 A Shrink decompressor only needs a fixed amount of memory, so to keep the
