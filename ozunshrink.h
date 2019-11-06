@@ -134,6 +134,8 @@ struct ozus_ctx_type {
 
 	unsigned int bitreader_buf;
 	unsigned int bitreader_nbits_in_buf;
+	size_t inbuf_nbytes_consumed;
+	size_t inbuf_nbytes_total;
 
 	struct ozus_tableentry ct[OZUS_NUM_CODES];
 
@@ -141,6 +143,9 @@ struct ozus_ctx_type {
 // 8192 - 257 + 1 = 7936.
 #define OZUS_VALBUFSIZE 7936
 	OZUS_UINT8 valbuf[OZUS_VALBUFSIZE];
+
+#define OZUS_INBUF_SIZE 1024
+	OZUS_UINT8 inbuf[OZUS_INBUF_SIZE];
 };
 
 static void ozus_set_error(ozus_ctx *ozus, int error_code)
@@ -166,24 +171,53 @@ static void ozus_init(ozus_ctx *ozus)
 	ozus->free_code_search_start = 257;
 }
 
-// TODO: Buffering
-static OZUS_UINT8 ozus_getnextbyte(ozus_ctx *ozus)
+static void ozus_refill_inbuf(ozus_ctx *ozus)
 {
 	size_t ret;
-	OZUS_UINT8 b;
+	size_t nbytes_to_read;
+
+	ozus->inbuf_nbytes_total = 0;
+	ozus->inbuf_nbytes_consumed = 0;
+
+	if((ozus->cmpr_size - ozus->cmpr_nbytes_consumed) > OZUS_INBUF_SIZE) {
+		nbytes_to_read = OZUS_INBUF_SIZE;
+	}
+	else {
+		nbytes_to_read = (size_t)(ozus->cmpr_size - ozus->cmpr_nbytes_consumed);
+	}
+	if(nbytes_to_read<1 || nbytes_to_read>OZUS_INBUF_SIZE) return;
+
+	ret = ozus->cb_read(ozus, ozus->inbuf, nbytes_to_read);
+	if(ret != nbytes_to_read) {
+		ozus_set_error(ozus, OZUS_ERRCODE_READ_FAILED);
+		return;
+	}
+	ozus->inbuf_nbytes_total = nbytes_to_read;
+}
+
+static OZUS_UINT8 ozus_getnextbyte(ozus_ctx *ozus)
+{
+	OZUS_UINT8 x;
 
 	if(ozus->error_code) return 0;
+
 	if(ozus->cmpr_nbytes_consumed >= ozus->cmpr_size) {
 		ozus_set_error(ozus, OZUS_ERRCODE_INSUFFICIENT_CDATA);
 		return 0;
 	}
-	ret = ozus->cb_read(ozus, &b, 1);
-	if(ret != 1) {
-		ozus_set_error(ozus, OZUS_ERRCODE_READ_FAILED);
-		return 0;
+
+	if(ozus->inbuf_nbytes_consumed >= ozus->inbuf_nbytes_total) {
+		// No bytes left in inbuf. Refill it.
+		ozus_refill_inbuf(ozus);
+		if(ozus->inbuf_nbytes_total<1) {
+			ozus_set_error(ozus, OZUS_ERRCODE_GENERIC_ERROR);
+			return 0;
+		}
 	}
+
+	x = ozus->inbuf[ozus->inbuf_nbytes_consumed++];
 	ozus->cmpr_nbytes_consumed++;
-	return b;
+	return x;
 }
 
 static OZUS_CODE ozus_getnextcode(ozus_ctx *ozus)
