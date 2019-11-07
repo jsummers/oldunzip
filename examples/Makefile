@@ -8,14 +8,14 @@ CXXFLAGS ?= -Wall
 AFLGCC ?= afl-gcc
 HDRS:= ../unimplode6a.h ../ozunreduce.h ../ozunshrink.h
 
-ozdemo: ozdemo.c $(HDRS)
+ozdemo: ozdemo.c $(HDRS) ozcrc32.h
 	$(CC) $(CFLAGS) -I.. -o $@ $<
 
 # Test that it can be compiled as C++.
 _ozdemocpp.cpp: ozdemo.c
 	cp $< $@
 
-_ozdemocpp: _ozdemocpp.cpp $(HDRS)
+_ozdemocpp: _ozdemocpp.cpp $(HDRS) ozcrc32.h
 	$(CXX) $(CXXFLAGS) -I.. -o $@ $<
 
 # Test that the example code in the libraries compiles.

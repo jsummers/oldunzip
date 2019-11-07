@@ -39,13 +39,19 @@ For more information, please refer to <http://unlicense.org/>
 #include "ozunreduce.h"
 #include "ozunshrink.h"
 
+#include "ozcrc32.h"
+
 #define DEMO_FSEEK fseek
 #define DEMO_FTELL ftell
 
 struct demo_userdata {
 	FILE *inf;
 	FILE *outf;
+	uint32_t crc_c;
 };
+
+// It is intentional that the next three sections have some repeated code.
+// The idea is to demonstrate using each library independently.
 
 //////////////////////////////////////////////////////////////////////////////
 // Unshrink
@@ -60,11 +66,12 @@ static size_t my_ozus_read(ozus_ctx *ozus, OZUS_UINT8 *buf, size_t size)
 static size_t my_ozus_write(ozus_ctx *ozus, const OZUS_UINT8 *buf, size_t size)
 {
 	struct demo_userdata *u = (struct demo_userdata*)ozus->userdata;
+	u->crc_c = ozcrc32(buf, size, u->crc_c);
 	return (size_t)fwrite(buf, 1, size, u->outf);
 }
 
 static void unshrink_member_file(FILE *inf, off_t data_offset,
-	off_t csize, off_t ucsize, char *outfn)
+	off_t csize, off_t ucsize, uint32_t crc_r, char *outfn)
 {
 	ozus_ctx *ozus = NULL;
 	FILE *outf = NULL;
@@ -79,6 +86,7 @@ static void unshrink_member_file(FILE *inf, off_t data_offset,
 
 	u.inf = inf;
 	u.outf = outf;
+	u.crc_c = 0;
 
 	ozus = (ozus_ctx *)calloc(1, sizeof(ozus_ctx));
 	if(!ozus) goto done;
@@ -93,6 +101,12 @@ static void unshrink_member_file(FILE *inf, off_t data_offset,
 	ozus_run(ozus);
 	if(ozus->error_code != OZUS_ERRCODE_OK) {
 		printf("Decompression failed (code %d)\n", ozus->error_code);
+		goto done;
+	}
+
+	printf("CRC-32, calculated: 0x%08x\n", (unsigned int)u.crc_c);
+	if(u.crc_c != crc_r) {
+		printf("CRC check failed\n");
 	}
 
 done:
@@ -113,11 +127,13 @@ static size_t my_ozur_read(ozur_ctx *ozur, OZUR_UINT8 *buf, size_t size)
 static size_t my_ozur_write(ozur_ctx *ozur, const OZUR_UINT8 *buf, size_t size)
 {
 	struct demo_userdata *u = (struct demo_userdata*)ozur->userdata;
+	u->crc_c = ozcrc32(buf, size, u->crc_c);
 	return (size_t)fwrite(buf, 1, size, u->outf);
 }
 
 static void unreduce_member_file(FILE *inf, off_t data_offset,
-	off_t csize, off_t ucsize, unsigned int cmpr_factor, char *outfn)
+	off_t csize, off_t ucsize, unsigned int cmpr_factor, uint32_t crc_r,
+	char *outfn)
 {
 	ozur_ctx *ozur = NULL;
 	FILE *outf = NULL;
@@ -132,6 +148,7 @@ static void unreduce_member_file(FILE *inf, off_t data_offset,
 
 	u.inf = inf;
 	u.outf = outf;
+	u.crc_c = 0;
 
 	ozur = (ozur_ctx *)calloc(1, sizeof(ozur_ctx));
 	if(!ozur) goto done;
@@ -147,6 +164,12 @@ static void unreduce_member_file(FILE *inf, off_t data_offset,
 	ozur_run(ozur);
 	if(ozur->error_code != OZUR_ERRCODE_OK) {
 		printf("Decompression failed (code %d)\n", ozur->error_code);
+		goto done;
+	}
+
+	printf("CRC-32, calculated: 0x%08x\n", (unsigned int)u.crc_c);
+	if(u.crc_c != crc_r) {
+		printf("CRC check failed\n");
 	}
 
 done:
@@ -171,13 +194,15 @@ static size_t my_ui6a_write(ui6a_ctx *ui6a, const UI6A_UINT8 *buf, size_t size)
 {
 	struct demo_userdata *u = (struct demo_userdata*)ui6a->userdata;
 
+	u->crc_c = ozcrc32(buf, size, u->crc_c);
 	// Note: Returning anything other than the requested 'size' is considered
 	// a failure.
 	return (size_t)fwrite(buf, 1, size, u->outf);
 }
 
 static void unimplode_member_file(FILE *inf, off_t data_offset,
-	off_t csize, off_t ucsize, uint16_t bit_flags, char *outfn)
+	off_t csize, off_t ucsize, uint16_t bit_flags, uint32_t crc_r,
+	char *outfn)
 {
 	ui6a_ctx *ui6a = NULL;
 	FILE *outf = NULL;
@@ -192,6 +217,8 @@ static void unimplode_member_file(FILE *inf, off_t data_offset,
 
 	u.inf = inf;
 	u.outf = outf;
+	u.crc_c = 0;
+
 	ui6a = ui6a_create((void*)&u);
 	if(!ui6a) goto done;
 
@@ -205,6 +232,11 @@ static void unimplode_member_file(FILE *inf, off_t data_offset,
 	ui6a_unimplode(ui6a);
 	if(ui6a->error_code != UI6A_ERRCODE_OK) {
 		printf("Decompression failed (code %d)\n", ui6a->error_code);
+	}
+
+	printf("CRC-32, calculated: 0x%08x\n", (unsigned int)u.crc_c);
+	if(u.crc_c != crc_r) {
+		printf("CRC check failed\n");
 	}
 
 done:
@@ -252,6 +284,7 @@ struct member_file_data {
 	off_t ucsize;
 	uint16_t bit_flags;
 	uint16_t cmpr_method;
+	uint32_t crc_r;
 };
 
 static void skipbytes(struct zip_file_data *zfd, off_t n)
@@ -300,8 +333,10 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 	mfd->cmpr_method = readui16(zfd);
 	printf("Compression method: %u\n", (unsigned int)mfd->cmpr_method);
 
-	skipbytes(zfd, 8); // time, date, crc
+	skipbytes(zfd, 4); // time, date
 
+	mfd->crc_r = readui32(zfd);
+	printf("CRC-32, reported: 0x%08x\n", (unsigned int)mfd->crc_r);
 	mfd->csize = readui32(zfd);
 	printf("Compressed size: %u\n", (unsigned int)mfd->csize);
 	mfd->ucsize = readui32(zfd);
@@ -349,15 +384,16 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 
 	if(mfd->cmpr_method==1) {
 		unshrink_member_file(zfd->inf, mfd->data_offset, mfd->csize,
-			mfd->ucsize, outfn);
+			mfd->ucsize, mfd->crc_r, outfn);
 	}
 	else if(mfd->cmpr_method>=2 && mfd->cmpr_method<=5) {
 		unreduce_member_file(zfd->inf, mfd->data_offset, mfd->csize,
-			mfd->ucsize, (unsigned int)(mfd->cmpr_method - 1), outfn);
+			mfd->ucsize, (unsigned int)(mfd->cmpr_method - 1),
+			mfd->crc_r, outfn);
 	}
 	else if(mfd->cmpr_method==6) {
 		unimplode_member_file(zfd->inf, mfd->data_offset, mfd->csize,
-			mfd->ucsize, mfd->bit_flags, outfn);
+			mfd->ucsize, mfd->bit_flags, mfd->crc_r, outfn);
 	}
 	zfd->num_files_extracted++;
 
