@@ -70,7 +70,7 @@ For more information, please refer to <http://unlicense.org/>
 ==============================================================================
 */
 
-#define OZUS_VERSION 20191118
+#define OZUS_VERSION 20191120
 
 #ifndef OZUS_UINT8
 #define OZUS_UINT8   unsigned char
@@ -136,6 +136,7 @@ struct ozus_ctx_type {
 	int have_oldcode;
 	OZUS_CODE oldcode;
 	OZUS_CODE last_code_added;
+	OZUS_CODE highest_code_ever_used;
 	OZUS_CODE free_code_search_start;
 	OZUS_UINT8 last_value;
 
@@ -371,6 +372,9 @@ static void ozus_add_to_dict(ozus_ctx *ozus, OZUS_CODE parent, OZUS_UINT8 value)
 	ozus->ct[newpos].value = value;
 	ozus->last_code_added = newpos;
 	ozus->free_code_search_start = newpos+1;
+	if(newpos > ozus->highest_code_ever_used) {
+		ozus->highest_code_ever_used = newpos;
+	}
 }
 
 // Process a single (nonspecial) LZW code that was read from the input stream.
@@ -422,13 +426,13 @@ static void ozus_partial_clear(ozus_ctx *ozus)
 		ozus->cb_pre_partial_clear(ozus);
 	}
 
-	for(i=257; i<OZUS_NUM_CODES; i++) {
+	for(i=257; i<=ozus->highest_code_ever_used; i++) {
 		if(ozus->ct[i].parent!=OZUS_INVALID_CODE) {
 			ozus->ct[ozus->ct[i].parent].flags = 1; // Mark codes that have a child
 		}
 	}
 
-	for(i=257; i<OZUS_NUM_CODES; i++) {
+	for(i=257; i<=ozus->highest_code_ever_used; i++) {
 		if(ozus->ct[i].flags == 0) {
 			ozus->ct[i].parent = OZUS_INVALID_CODE; // Clear this code
 			ozus->ct[i].value = 0;
