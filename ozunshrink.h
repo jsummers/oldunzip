@@ -70,7 +70,7 @@ For more information, please refer to <http://unlicense.org/>
 ==============================================================================
 */
 
-#define OZUS_VERSION 20191106
+#define OZUS_VERSION 20191118
 
 #ifndef OZUS_UINT8
 #define OZUS_UINT8   unsigned char
@@ -113,6 +113,8 @@ typedef struct ozus_ctx_type ozus_ctx;
 
 typedef size_t (*ozus_cb_read_type)(ozus_ctx *ozus, OZUS_UINT8 *buf, size_t size);
 typedef size_t (*ozus_cb_write_type)(ozus_ctx *ozus, const OZUS_UINT8 *buf, size_t size);
+typedef void (*ozus_cb_inc_code_size_type)(ozus_ctx *ozus);
+typedef void (*ozus_cb_pre_partial_clear_type)(ozus_ctx *ozus);
 
 struct ozus_ctx_type {
 	// Fields the user can or must set:
@@ -121,6 +123,8 @@ struct ozus_ctx_type {
 	OZUS_OFF_T uncmpr_size; // reported uncompressed size
 	ozus_cb_read_type cb_read;
 	ozus_cb_write_type cb_write;
+	ozus_cb_inc_code_size_type cb_inc_code_size; // Optional hook
+	ozus_cb_pre_partial_clear_type cb_pre_partial_clear; // Optional hook
 
 	// Fields the user can read:
 	int error_code;
@@ -414,6 +418,10 @@ static void ozus_partial_clear(ozus_ctx *ozus)
 {
 	OZUS_CODE i;
 
+	if(ozus->cb_pre_partial_clear) {
+		ozus->cb_pre_partial_clear(ozus);
+	}
+
 	for(i=257; i<OZUS_NUM_CODES; i++) {
 		if(ozus->ct[i].parent!=OZUS_INVALID_CODE) {
 			ozus->ct[ozus->ct[i].parent].flags = 1; // Mark codes that have a child
@@ -460,6 +468,9 @@ static void ozus_run(ozus_ctx *ozus)
 
 			if(n==1 && (ozus->curr_code_size<OZUS_MAX_CODE_SIZE)) {
 				ozus->curr_code_size++;
+				if(ozus->cb_inc_code_size) {
+					ozus->cb_inc_code_size(ozus);
+				}
 			}
 			else if(n==2) {
 				ozus_partial_clear(ozus);
