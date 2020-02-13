@@ -21,7 +21,7 @@ might appear alongside it.
 This software is dual-licensed. Choose the license you prefer:
 ------------------------------------------------------------------------------
 Licence option #1: MIT
-Copyright (C) 2019 Jason Summers
+Copyright (C) 2019-2020 Jason Summers
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -70,7 +70,7 @@ For more information, please refer to <http://unlicense.org/>
 ==============================================================================
 */
 
-#define OZUS_VERSION 20191120
+#define OZUS_VERSION 20200213
 
 #ifndef OZUS_UINT8
 #define OZUS_UINT8   unsigned char
@@ -147,10 +147,11 @@ struct ozus_ctx_type {
 	size_t inbuf_nbytes_total;
 	size_t outbuf_nbytes_used;
 
+	// The code table (implements a "dictionary")
 	struct ozus_tableentry ct[OZUS_NUM_CODES];
 
 // Need room for the max possible chain length, which I calculate to be
-// 8192 - 257 + 1 = 7936.
+// at most 8192 - 257 + 1 = 7936.
 #define OZUS_VALBUFSIZE 7936
 	OZUS_UINT8 valbuf[OZUS_VALBUFSIZE];
 
@@ -301,7 +302,7 @@ static void ozus_write(ozus_ctx *ozus, const OZUS_UINT8 *buf, size_t n)
 }
 
 // Decode an LZW code to one or more values, and write the values.
-// Updates ctx->last_value.
+// Updates ozus->last_value.
 static void ozus_emit_code(ozus_ctx *ozus, OZUS_CODE code1)
 {
 	OZUS_CODE code = code1;
