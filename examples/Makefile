@@ -3,8 +3,8 @@ default: ozdemo
 all: ozdemo _ozdemocpp testexamplecode ozft
 .PHONY: default all clean
 
-CFLAGS ?= -Wall
-CXXFLAGS ?= -Wall
+CFLAGS ?= -Wall -O2
+CXXFLAGS ?= -Wall -O2
 AFLGCC ?= afl-gcc
 HDRS:= ../unimplode6a.h ../ozunreduce.h ../ozunshrink.h
 
