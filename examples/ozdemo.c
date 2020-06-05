@@ -1,5 +1,5 @@
 // Demonstration program for the Ozunreduce and Unimplode6a libraries.
-// Written by Jason Summers, 2019.
+// Written by Jason Summers, 2019-2020.
 /*
 ======================== TERMS OF USE for ozdemo.c =========================
 This is free and unencumbered software released into the public domain.
@@ -245,11 +245,54 @@ done:
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// Compression method 0 (no compression)
+// For completion, so that this demo supports all PKZIP 1.x and earlier
+// archives.
+//////////////////////////////////////////////////////////////////////////////
+
+static void copy_member_file(FILE *inf, off_t data_offset,
+	off_t csize, off_t ucsize, uint32_t crc_r,
+	char *outfn)
+{
+	FILE *outf = NULL;
+	off_t nbytes_remaining = csize;
+	uint32_t crc_c = 0;
+
+	outf = fopen(outfn, "wb");
+	if(!outf) {
+		printf("Open for write failed\n");
+		goto done;
+	}
+	printf("Extracting to %s\n", outfn);
+
+	DEMO_FSEEK(inf, (long)data_offset, SEEK_SET);
+
+	while(nbytes_remaining >= 1) {
+		int ci;
+		unsigned char ch;
+
+		ci = fgetc(inf);
+		if(ci==EOF) break;
+		fputc(ci, outf);
+		ch = (unsigned char)ci;
+		crc_c = ozcrc32(&ch, 1, crc_c);
+		nbytes_remaining--;
+	}
+
+	printf("CRC-32, calculated: 0x%08x\n", (unsigned int)crc_c);
+	if(crc_c != crc_r) {
+		printf("CRC check failed\n");
+	}
+
+done:
+	if(outf) fclose(outf);
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // Below this point is just code for ZIP parsing, nothing specific to
 // the libraries.
 //
-// (Due to the complexity of ZIP format, and the fact that Implode
-// compression is pretty much exclusive to ZIP, the minimal useful sample
+// (Due to the complexity of ZIP format, the minimal useful sample
 // program is fairly large.)
 //////////////////////////////////////////////////////////////////////////////
 
@@ -359,7 +402,7 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 	// We think we've parsed the central dir entry successfully, so return "success".
 	retval = 1;
 
-	if(mfd->cmpr_method<1 || mfd->cmpr_method>6) {
+	if(mfd->cmpr_method<0 || mfd->cmpr_method>6) {
 		printf("Compression method %u not supported\n", (unsigned int)mfd->cmpr_method);
 		goto done;
 	}
@@ -382,7 +425,11 @@ static int process_member_file(struct zip_file_data *zfd, struct member_file_dat
 
 	DEMO_SNPRINTF(outfn, sizeof(outfn), "demo.%03d.out", mfd->idx);
 
-	if(mfd->cmpr_method==1) {
+	if(mfd->cmpr_method==0) {
+		copy_member_file(zfd->inf, mfd->data_offset, mfd->csize,
+			mfd->ucsize, mfd->crc_r, outfn);
+	}
+	else if(mfd->cmpr_method==1) {
 		unshrink_member_file(zfd->inf, mfd->data_offset, mfd->csize,
 			mfd->ucsize, mfd->crc_r, outfn);
 	}
