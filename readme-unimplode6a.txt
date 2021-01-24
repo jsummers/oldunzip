@@ -22,9 +22,13 @@ Implode was used by most ZIP files created in 1992 or earlier. I don't know of
 a really good resource. You could try some of the DOS CDs at
 <http://cd.textfiles.com/directory.html>.
 
-Or you could make them, with PKZIP 1.10 (search for PKZ110.EXE) + DOSBox
-<https://www.dosbox.com/>. Suggest using the -ei option documented in the
-ADDENDUM.DOC file.
+Or you could make them, maybe by running an old DOS program in DOSBox
+<https://www.dosbox.com/>.
+* PKZIP - The recommended version for creating Imploded files is 1.02 (search
+  for PKZ102.EXE). Version 1.10 (PKZ110.EXE) is easier to find, but it does
+  have a bug that, in very rare cases, creates corrupted Imploded files. Use
+  the -ei option to make it more likely that Implode compression will be used.
+* PAK (search for PAK251.EXE) is another program that can create such files.
 
 === About the name "Unimplode6a" ===
 
